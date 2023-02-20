@@ -7,6 +7,20 @@ from io import BytesIO
 from os import startfile
 from screeninfo import get_monitors
 from keyboard import add_hotkey
+import sys
+from subprocess import Popen
+
+'''
+作者: CY
+截圖小程式，開啟程式後，等待螢幕變得有點灰灰的，就可以開始按下滑鼠左鍵拖拉，完成後會自動把截圖畫面存在剪貼簿，可以直接ctrl+v貼上
+過程中按 Esc 可退出
+
+run python script:
+activate temp (in RTK computer)
+
+build exe:
+pyinstaller -D -w goodtouse.py
+'''
 
 def screen_button_1(event):
     global screen_x, screen_y ,screen_xstart,screen_ystart
@@ -81,6 +95,7 @@ def repeat():
 repeat_flag = 0
 end_program = 0
 
+
 img = ImageGrab.grab(all_screens=True)
 #print(img.size)
 x_offset = 999999
@@ -91,7 +106,7 @@ for m in get_monitors():
 #print(x_offset)
 img_c = ''
 
-add_hotkey('ctrl+n', repeat)
+add_hotkey('ctrl+n', repeat)        # 加入hotkey
 
 screen_root = Tk()
 screen_root.overrideredirect(True)  # 隱藏視窗的標題列
@@ -139,4 +154,7 @@ if end_program == 0:
     root.mainloop()
 
     if repeat_flag == 1:
-        startfile('goodtouse.exe')
+        if sys.argv[0].find('.py') != -1:
+            Popen('python goodtouse.py')   # 測試用，還沒包成exe之前測試的
+        else:
+            startfile('goodtouse.exe')     # 打开窗口后不等待窗口退出直接继续执行（主进程创建一个子进程去打新的窗口，主进程创建完成子进程后立即继续往下执行）
