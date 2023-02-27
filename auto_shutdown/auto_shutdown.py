@@ -74,7 +74,7 @@ class Window():
             btn_1 = canvas.create_image(150, 90, anchor=NW, image=img_btn, tag = ('btn'))
             canvas.tag_bind('btn','<Button-1>', lambda e: self.Close(event=e))
 
-            self.root.after(5000,lambda: self.Close())                   # 三分鐘後關掉視窗
+            self.root.after(180000,lambda: self.Close())                   # 三分鐘後關掉視窗
     
             self.root.mainloop()
         elif mode == 'Q_A':
