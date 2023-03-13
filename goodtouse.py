@@ -7,7 +7,7 @@ from io import BytesIO
 from os import startfile
 from screeninfo import get_monitors
 from keyboard import add_hotkey, unhook_all_hotkeys
-# import sys
+import sys
 from subprocess import Popen
 
 '''
@@ -19,7 +19,7 @@ run python script:
 activate temp (in RTK computer)
 
 build exe:
-pyinstaller -D -w --add-data "goodtouse.txt" goodtouse.py
+pyinstaller -D -w --add-data "goodtouse.txt;." goodtouse.py
 '''
 
 def screen_button_1(event):
