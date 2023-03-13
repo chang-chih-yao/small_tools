@@ -22,6 +22,16 @@ build exe:
 pyinstaller -D -w --add-data "goodtouse.txt;." goodtouse.py
 '''
 
+def copy_to_clipboard(img):   # PIL Image format
+    output = BytesIO()
+    img.convert('RGB').save(output, 'BMP')
+    data = output.getvalue()[14:]
+    output.close()
+    clip.OpenClipboard()
+    clip.EmptyClipboard()
+    clip.SetClipboardData(win32con.CF_DIB, data)
+    clip.CloseClipboard()
+
 def screen_button_1(event):
     global screen_x, screen_y ,screen_xstart,screen_ystart
     global screen_rec
@@ -54,14 +64,6 @@ def screen_buttonRelease_1(event):
         img_c = img.crop((screen_xstart, screen_ystart, screen_xend, screen_yend))
         #img_c.save('screenshot.png')
         #print('screenshot.png save completely')
-        output = BytesIO()
-        img_c.convert('RGB').save(output, 'BMP')
-        data = output.getvalue()[14:]
-        output.close()
-        clip.OpenClipboard()
-        clip.EmptyClipboard()
-        clip.SetClipboardData(win32con.CF_DIB, data)
-        clip.CloseClipboard()
         screen_root.destroy()
 
 def mouse_motion(event):
@@ -151,7 +153,8 @@ if full_screen_flag == 0:
     screen_root.mainloop()
 
 
-if end_program == 0:
+if end_program == 0:    # if not enc_program
+    copy_to_clipboard(img_c)
     add_hotkey('ctrl+n', repeat)        # 加入hotkey
 
     root = Tk()
