@@ -6,8 +6,8 @@ import win32con
 from io import BytesIO
 from os import startfile
 from screeninfo import get_monitors
-from keyboard import add_hotkey
-import sys
+from keyboard import add_hotkey, unhook_all_hotkeys
+# import sys
 from subprocess import Popen
 
 '''
@@ -19,7 +19,7 @@ run python script:
 activate temp (in RTK computer)
 
 build exe:
-pyinstaller -D -w goodtouse.py
+pyinstaller -D -w --add-data "goodtouse.txt" goodtouse.py
 '''
 
 def screen_button_1(event):
@@ -81,19 +81,32 @@ def browse_button():
     global img_c
     filename = filedialog.asksaveasfilename(parent=root, initialdir='~/', filetypes = (("png files","*.png"),("all files","*.*")))
     if not filename:
-        print('no choosen file')
+        pass
+        # print('no choosen file')
     else:
-        print(filename)
+        # print(filename)
         img_c.save(filename + '.png')
     
 def repeat():
-    global repeat_flag
+    global repeat_flag, full_screen_flag
     repeat_flag = 1
+    full_screen_flag = 0
+    root.destroy()
+
+def full_screen():
+    global repeat_flag, full_screen_flag
+    repeat_flag = 1
+    full_screen_flag = 1
     root.destroy()
 
 
 repeat_flag = 0
+full_screen_flag = 0
 end_program = 0
+
+with open('goodtouse.txt', 'r') as f:
+    full_screen_flag = int(f.readline().strip())
+    # print(full_screen_flag)
 
 
 img = ImageGrab.grab(all_screens=True)
@@ -104,56 +117,63 @@ for m in get_monitors():
     if x_offset > m.x:
         x_offset = m.x
 #print(x_offset)
-img_c = ''
+img_c = img.copy()
 
-add_hotkey('ctrl+n', repeat)        # 加入hotkey
 
-screen_root = Tk()
-screen_root.overrideredirect(True)  # 隱藏視窗的標題列
-screen_root.attributes("-alpha", 0.3) # 視窗透明度30%
-screen_root.geometry("{0}x{1}+{2}+0".format(img.size[0], img.size[1], x_offset))
-screen_root.configure(bg="black")
+if full_screen_flag == 0:
+    screen_root = Tk()
+    screen_root.overrideredirect(True)  # 隱藏視窗的標題列
+    screen_root.attributes("-alpha", 0.3) # 視窗透明度30%
+    screen_root.geometry("{0}x{1}+{2}+0".format(img.size[0], img.size[1], x_offset))
+    screen_root.configure(bg="black")
 
-# 再建立1個Canvas用於圈選
-screen_cv = Canvas(screen_root)
-screen_cv.config(highlightthickness=0) # 無邊框
-screen_x, screen_y = 0, 0
-screen_xstart,screen_ystart = 0 ,0
-screen_xend,screen_yend = 0, 0
-screen_rec = ''
+    # 再建立1個Canvas用於圈選
+    screen_cv = Canvas(screen_root)
+    screen_cv.config(highlightthickness=0) # 無邊框
+    screen_x, screen_y = 0, 0
+    screen_xstart,screen_ystart = 0 ,0
+    screen_xend,screen_yend = 0, 0
+    screen_rec = ''
 
-canvas = Canvas(screen_root)
-canvas.configure(width=180)
-canvas.configure(height=25)
-canvas.configure(bg="yellow")
-canvas.configure(highlightthickness=0)  # 高亮厚度
-canvas.place(x=(screen_root.winfo_screenwidth()-500),y=(screen_root.winfo_screenheight()-300))
-my_text = canvas.create_text(80, 10,font='Arial -14 bold',text='ESC to exit')
+    canvas = Canvas(screen_root)
+    canvas.configure(width=180)
+    canvas.configure(height=25)
+    canvas.configure(bg="yellow")
+    canvas.configure(highlightthickness=0)  # 高亮厚度
+    canvas.place(x=(screen_root.winfo_screenwidth()-500),y=(screen_root.winfo_screenheight()-300))
+    my_text = canvas.create_text(80, 10,font='Arial -14 bold',text='ESC to exit')
 
-screen_root.bind("<Motion>", mouse_motion)
-screen_root.bind('<Escape>',screen_sys_out) # 鍵盤Esc鍵->退出
-screen_root.bind("<Button-1>", screen_button_1) # 滑鼠左鍵點選->顯示子視窗 
-screen_root.bind("<B1-Motion>", screen_b1_Motion)# 滑鼠左鍵移動->改變子視窗大小
-screen_root.bind("<ButtonRelease-1>", screen_buttonRelease_1) # 滑鼠左鍵釋放->記錄最後遊標的位置
-screen_root.mainloop()
+    screen_root.bind("<Motion>", mouse_motion)
+    screen_root.bind('<Escape>',screen_sys_out) # 鍵盤Esc鍵->退出
+    screen_root.bind("<Button-1>", screen_button_1) # 滑鼠左鍵點選->顯示子視窗 
+    screen_root.bind("<B1-Motion>", screen_b1_Motion)# 滑鼠左鍵移動->改變子視窗大小
+    screen_root.bind("<ButtonRelease-1>", screen_buttonRelease_1) # 滑鼠左鍵釋放->記錄最後遊標的位置
+    screen_root.mainloop()
 
 
 if end_program == 0:
+    add_hotkey('ctrl+n', repeat)        # 加入hotkey
+
     root = Tk()
     root.title('goodtouse')
-    if img_c.size[0] < 220:
-        root.geometry('{0}x{1}'.format(250, img_c.size[1]+50))
+    if img_c.size[0] < 325:
+        root.geometry('{0}x{1}'.format(345, img_c.size[1]+50))
     else:
         root.geometry('{0}x{1}'.format(img_c.size[0]+20, img_c.size[1]+50))
 
-    button1 = Button(text="Save img", command=browse_button).place(x=10, y=10)
-    button2 = Button(text="Screen again (ctrl + n)", command=repeat).place(x=80, y=10)
+    button1 = Button(root, text="Save img", command=browse_button).place(x=10, y=10)
+    button2 = Button(root, text="Screen again (ctrl + n)", command=repeat).place(x=80, y=10)
+    button2 = Button(root, text="Full screen capture", command=full_screen).place(x=220, y=10)
     tk_img = ImageTk.PhotoImage(img_c)
     Label(root, image=tk_img).place(x=10, y=40)
 
     root.mainloop()
 
+    unhook_all_hotkeys()
+
     if repeat_flag == 1:
+        with open('goodtouse.txt', 'w') as f:
+            f.write(str(full_screen_flag))
         if sys.argv[0].find('.py') != -1:
             Popen('python goodtouse.py')   # 測試用，還沒包成exe之前測試的
         else:
