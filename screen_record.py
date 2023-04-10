@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
-import pyautogui
+# import pyautogui
+import mss
+import time
 # import tkinter
 
 '''
@@ -10,29 +12,42 @@ import pyautogui
 '''
 
 # display screen resolution, get it using pyautogui itself
-SCREEN_SIZE = tuple(pyautogui.size())
+# SCREEN_SIZE = tuple(pyautogui.size())
+SCREEN_SIZE = (1920, 1080)
+monitor = {"top": 0, "left": 0, "width": SCREEN_SIZE[0], "height": SCREEN_SIZE[1]}
+cap = mss.mss()
+
 # fourcc = cv2.VideoWriter_fourcc(*"XVID")
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-fps = 20.0
+fps = 30.0
 record_seconds = 9999
-print('total record_seconds: ' + str(record_seconds))
+print('Max record seconds: ' + str(record_seconds))
 file_name = input('please input file name: ')
 # out = cv2.VideoWriter("output.avi", fourcc, fps, (SCREEN_SIZE))
 out = cv2.VideoWriter(file_name+".mp4", fourcc, fps, (SCREEN_SIZE))
 try:
     for i in range(int(record_seconds * fps)):
-        img = pyautogui.screenshot()
+        start = time.perf_counter()
+        img = cap.grab(monitor)
+        # img = pyautogui.screenshot()
+        
         # convert these pixels to a proper numpy array to work with OpenCV
         frame = np.array(img)
+        
         # convert colors from BGR to RGB
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
         out.write(frame)
-        # show the frame
+        # print(1/(time.perf_counter() - start))
+        
         # cv2.imshow("screenshot", frame)
         # # if the user clicks q, it exits
         # if cv2.waitKey(1) == ord("q"):
         #     break
-        print(str(int(i/fps)) + ' ', end='\r')
+        # print(str(int(i/fps)) + ' ', end='\r')
+        if i % 5 == 0:
+            cost_time = 1/(time.perf_counter() - start)
+            print(f'sec: {int(i/fps)}, fps: {cost_time:.2f}', end='\r')
 
     # cv2.destroyAllWindows()
     out.release()
