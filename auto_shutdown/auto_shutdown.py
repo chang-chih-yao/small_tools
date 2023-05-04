@@ -21,6 +21,7 @@ with open('關機時間設定.txt', 'r') as f:
 shutdown_hour = int(lines[0].split('\n')[0])    # 第一行代表小時(24小時制)
 shutdown_minute = int(lines[1].split('\n')[0])  # 第二行代表分鐘
 delay_min = 15                                  # 每次延長的時間長度 (單位:分鐘)
+wait_time_min = 10                              # 等多久就自動關機 (單位:分鐘)
 w = 400                                         # 視窗寬度
 h = 500                                         # 視窗長度
 shutdown_flag = False                           # shutdown_flag 是 True 時代表使用者已經按下同意關機
@@ -74,7 +75,7 @@ class Window():
             btn_1 = canvas.create_image(150, 90, anchor=NW, image=img_btn, tag = ('btn'))
             canvas.tag_bind('btn','<Button-1>', lambda e: self.Close(event=e))
 
-            self.root.after(180000,lambda: self.Close())                   # 三分鐘後關掉視窗
+            self.root.after(180000, lambda: self.Close())                   # 三分鐘後關掉視窗
     
             self.root.mainloop()
         elif mode == 'Q_A':
@@ -89,7 +90,7 @@ class Window():
             btn_delay = canvas.create_image(220, 430, anchor=NW, image=img_btn_delay, tag = ('btn_delay'))
             canvas.tag_bind('btn_delay','<Button-1>', lambda e: self.my_select(select=False, event=e))
 
-            self.root.after(180000, lambda: self.my_select(select=True))   # 三分鐘後自動結束程式+關機
+            self.root.after(wait_time_min*60*1000, lambda: self.my_select(select=True))   # 三分鐘後自動結束程式+關機
     
             self.root.mainloop()
   
