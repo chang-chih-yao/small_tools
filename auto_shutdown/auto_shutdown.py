@@ -240,22 +240,23 @@ class Window():
     
     def my_select(self, select, event=None):
         global shutdown_flag, shutdown_hour, shutdown_minute, active_by_gui, time_out_flag
-        active_by_gui = True
-        time_out_flag = False
-        time.sleep(0.1)
-        # if event != None:
-        #     print(event)
-        if select:   # 準備關機
-            print('going to shutdown ...')
-            shutdown_flag = True
-        else:        # 延長 delay_min 關機時間
-            print('delay', delay_min, 'min')
-            hour, minute = get_GMT8_time(delay=delay_min)
-            shutdown_hour = hour
-            shutdown_minute = minute
-            shutdown_flag = False
-        
-        self.root.destroy()
+        if time.time() - self.now_time >= 2.0:
+            active_by_gui = True
+            time_out_flag = False
+            time.sleep(0.1)
+            # if event != None:
+            #     print(event)
+            if select:   # 準備關機
+                print('going to shutdown ...')
+                shutdown_flag = True
+            else:        # 延長 delay_min 關機時間
+                print('delay', delay_min, 'min')
+                hour, minute = get_GMT8_time(delay=delay_min)
+                shutdown_hour = hour
+                shutdown_minute = minute
+                shutdown_flag = False
+            
+            self.root.destroy()
         
     def destroy_all_components(self):
         if self.t != None:
