@@ -7,3 +7,8 @@
 
 __pycache__/
 .vscode/
+
+
+loading/
+out/
+out_win/
