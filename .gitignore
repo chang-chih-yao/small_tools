@@ -12,3 +12,7 @@ __pycache__/
 loading/
 out/
 out_win/
+
+goodtouse/*
+!goodtouse/goodtouse.py
+!goodtouse/goodtouse.txt
