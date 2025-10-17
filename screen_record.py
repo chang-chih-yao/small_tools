@@ -3,6 +3,8 @@ import numpy as np
 # import pyautogui
 import mss
 import time
+import os
+import sys
 # import tkinter
 
 '''
@@ -21,10 +23,14 @@ cap = mss.mss()
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 fps = 30.0
 record_seconds = 9999
-print('Max record seconds: ' + str(record_seconds))
-file_name = input('please input file name: ')
+print(f'Max record seconds: {record_seconds}, ctrl-c to stop')
+file_name = input('please input file name(dont inlucde .mp4): ')
+full_file_name = f'{file_name}.mp4'
+if os.path.isfile(full_file_name):
+    print(f'Error, file "{full_file_name}" exist!!!')
+    sys.exit()
 # out = cv2.VideoWriter("output.avi", fourcc, fps, (SCREEN_SIZE))
-out = cv2.VideoWriter(file_name+".mp4", fourcc, fps, (SCREEN_SIZE))
+out = cv2.VideoWriter(full_file_name, fourcc, fps, (SCREEN_SIZE))
 try:
     for i in range(int(record_seconds * fps)):
         start = time.perf_counter()
