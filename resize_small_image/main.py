@@ -1,11 +1,11 @@
 from PIL import Image
 
-INPUT_IMG_NAME = 'ex_1.png'
+INPUT_IMG_NAME = 'translate.png'
 OUTPUT_IMG_NAME = 'output.png'
 
 def resize_to_fixed_w_h():
-    w = 24                                  # fixed
-    h = 24                                  # fixed
+    w = 30                                  # fixed
+    h = 30                                  # fixed
     img = Image.open(INPUT_IMG_NAME)
     img = img.resize((w, h), resample=Image.LANCZOS)
     img.save(OUTPUT_IMG_NAME)
@@ -37,4 +37,6 @@ def resize_by_h_same_ratio():
     img = img.resize((w, h), resample=Image.LANCZOS)
     img.save(OUTPUT_IMG_NAME)
 
-resize_by_w_same_ratio()
+# resize_by_w_same_ratio()
+# resize_by_scale()
+resize_to_fixed_w_h()
