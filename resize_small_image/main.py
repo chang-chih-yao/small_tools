@@ -1,11 +1,13 @@
 from PIL import Image
+import sys
+import os
 
-INPUT_IMG_NAME = 'translate.png'
+INPUT_IMG_NAME = input('INPUT_IMG_NAME: (include .png or .jpg)\n')
 OUTPUT_IMG_NAME = 'output.png'
 
 def resize_to_fixed_w_h():
-    w = 30                                  # fixed
-    h = 30                                  # fixed
+    w = 20                                  # fixed
+    h = 20                                  # fixed
     img = Image.open(INPUT_IMG_NAME)
     img = img.resize((w, h), resample=Image.LANCZOS)
     img.save(OUTPUT_IMG_NAME)
