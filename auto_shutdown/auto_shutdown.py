@@ -19,7 +19,7 @@ auto_shutdown.py (重構版)
   python auto_shutdown.py
 
 打包 exe:
-  pyinstaller -F -w auto_shutdown.py
+  pyinstaller -F -w --icon="2.ico" auto_shutdown.py
 """
 
 import time
@@ -360,7 +360,7 @@ def main() -> None:
                 else:
                     webhook.notify_cancel('y', config.delay_min)
                 print('[MAIN] executing shutdown')
-                # system('shutdown -s -f -t 30')
+                system('shutdown -s -f -t 30')
                 break
             else:
                 # 使用者選擇延後，通知 Lambda 並顯示啟動通知視窗
