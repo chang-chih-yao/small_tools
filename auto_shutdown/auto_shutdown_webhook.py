@@ -46,8 +46,8 @@ if CY_BOT_TOKEN is None:
     print("Warning: CY_BOT_TOKEN is not set in environment variables.")
     sys.exit(1)
 
-# TELEGRAM_CHAT_ID    = 5892597105  # 淳的 Telegram Chat ID
-TELEGRAM_CHAT_ID    = 1394612480  # cychang1994 的 Telegram Chat ID
+TELEGRAM_CHAT_ID    = 5892597105  # 淳的 Telegram Chat ID
+# TELEGRAM_CHAT_ID    = 1394612480  # cychang1994 的 Telegram Chat ID
 DYNAMODB_TABLE_NAME = 'auto_shutdown_state'
 PK_NAME             = 'shutdown_state'       # 固定 primary key，只存一筆狀態
 
