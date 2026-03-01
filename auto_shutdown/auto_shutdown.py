@@ -21,13 +21,13 @@ auto_shutdown.py (重構版)
 打包 exe:
   pyinstaller -F -w auto_shutdown.py
 """
-from __future__ import annotations
+
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from os import system
 from tkinter import Canvas, Label, Button, Tk, NW
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 
 from PIL import Image, ImageTk
 from requests import get, post, RequestException
@@ -89,7 +89,7 @@ class WebhookClient:
     Window class 不應直接呼叫 requests，由這個 class 負責。
     """
 
-    def notify_shutdown(self, state: ShutdownState, delay_min: int) -> None:
+    def notify_shutdown(self, state: ShutdownState, delay_min: int, wait_time_min: int) -> None:
         """告知 Lambda 關機時間到了，Lambda 會傳 Telegram 訊息問使用者。"""
         payload = {
             'method': 'shutdown',
@@ -97,6 +97,7 @@ class WebhookClient:
                 'shutdown_hour':   state.shutdown_hour,
                 'shutdown_minute': state.shutdown_minute,
                 'delay_min':       delay_min,
+                'wait_time_min':   wait_time_min,
             },
         }
         self._post(URL_NOTIFY, payload, label='notify_shutdown')
@@ -188,7 +189,7 @@ class Window:
         self.root.geometry(f'{cfg.win_width}x{cfg.win_height}+{cx}+{cy}')
         self.root.title('自動關機程式')
         self.root.attributes('-topmost', True)
-        self.root.overrideredirect(True)
+        self.root.overrideredirect(True)              # 隱藏視窗的標題列
         self.root.configure(bg='#FFFFFF')
         self.root.resizable(False, False)
         self.root.iconbitmap('2.ico')
@@ -346,7 +347,7 @@ def main() -> None:
 
         if now.hour == state.shutdown_hour and now.minute == state.shutdown_minute:
             # 時間到了，通知 Lambda 傳 Telegram 訊息給使用者
-            webhook.notify_shutdown(state, config.delay_min)
+            webhook.notify_shutdown(state, config.delay_min, config.wait_time_min)
 
             # 顯示 Q_A 視窗（等待 GUI 按鈕或手機回覆）
             Window('Q_A', config, state, webhook).run()
@@ -363,8 +364,8 @@ def main() -> None:
                 break
             else:
                 # 使用者選擇延後，通知 Lambda 並顯示啟動通知視窗
-                if state.triggered_by == 'gui':
-                    webhook.notify_cancel('n', config.delay_min)
+                # if state.triggered_by == 'gui':
+                webhook.notify_cancel('n', config.delay_min)
                 Window('begin', config, state, webhook).run()
                 time.sleep(0.2)
 

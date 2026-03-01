@@ -71,6 +71,8 @@ def send_telegram_message(chat_id: int, message: str) -> bool:
         # self.logger.info(f'{response.json()}')
     except Exception as e:
         print(f'Error sending message to Telegram: {e}')
+        return False
+    return True
 
 # ─── 路由處理函式 ─────────────────────────────────────────────────────────────
 
@@ -96,11 +98,12 @@ def handle_for_wanchun(body: dict) -> dict:
         shutdown_hour   = shutdown_info.get('shutdown_hour', 0)
         shutdown_minute = shutdown_info.get('shutdown_minute', 0)
         delay_min       = shutdown_info.get('delay_min', 20)
-        ttl             = int(time.time()) + 3600  # 1 小時後 DynamoDB 自動刪除
+        wait_time_min   = shutdown_info.get('wait_time_min', 10)
+        ttl             = int(time.time()) + 43200  # 12 小時後 DynamoDB 自動刪除
 
         # 寫入 DynamoDB：標記正在等待使用者回覆
         table.put_item(Item={
-            'pk':              PK_NAME,
+            'shutdown_state':  PK_NAME,
             'is_question':     True,
             'select':          None,
             'method':          'shutdown',
@@ -113,9 +116,9 @@ def handle_for_wanchun(body: dict) -> dict:
 
         # 傳 Telegram 訊息問使用者
         msg = (
-            f'賢寶寶的電腦預計在 {shutdown_hour:02d}:{shutdown_minute:02d} 關機\n'
-            f'請回覆：\n'
-            f'  y → 確定關機\n'
+            f'賢寶寶的電腦準備關機嚕！\n'
+            f'請於 {wait_time_min} 分鐘內回覆 (逾時則自動關機)：\n'
+            f'  y → 立刻關機\n'
             f'  n → 延長 {delay_min} 分鐘'
         )
         send_telegram_message(TELEGRAM_CHAT_ID, msg)
@@ -127,10 +130,12 @@ def handle_for_wanchun(body: dict) -> dict:
         flag          = cancel_info.get('flag', '')
         delay_min     = cancel_info.get('delay_min', 20)
 
+        print(f'[cancel] method={cancel_method} flag={flag} delay_min={delay_min}')
+
         messages = {
-            ('shutdown', 'y'):       '✅ 確認關機，電腦已關機',
+            ('shutdown', 'y'):       f'✅ 確認關機，電腦將在 1 分鐘內自動關機',
             ('shutdown', 'n'):       f'⏰ 已延長關機時間 {delay_min} 分鐘',
-            ('shutdown', 'timeout'): '⚠️ 等待逾時，電腦已自動關機',
+            ('shutdown', 'timeout'): f'⚠️ 等待逾時，電腦已自動關機',
         }
         msg = messages.get((cancel_method, flag))
         if msg:
@@ -154,10 +159,10 @@ def handle_for_wanchun_get_json(body: dict) -> dict:
         {"is_question": true,  "select": null}   ← 還在等待
         {"is_question": false, "select": "y"}    ← 使用者同意關機
         {"is_question": false, "select": "n"}    ← 使用者要延後
-        {}                                        ← DynamoDB 無資料（異常）
+        {}                                       ← DynamoDB 無資料（異常）
     """
     try:
-        response = table.get_item(Key={'pk': PK_NAME})
+        response = table.get_item(Key={'shutdown_state': PK_NAME})
         item     = response.get('Item')
         if not item:
             print('[DDB] no item found')
@@ -183,7 +188,7 @@ def handle_for_wanchun_set_json(body: dict) -> dict:
     避免下一次關機時讀到上一次的殘留資料。
     """
     try:
-        table.delete_item(Key={'pk': PK_NAME})
+        table.delete_item(Key={'shutdown_state': PK_NAME})
         print('[DDB] state cleared')
         return ok_response({'status': 'cleared'})
     except Exception as e:
@@ -223,11 +228,11 @@ def handle_telegram_webhook(event_body: dict) -> dict:
     if text in ('y', 'yes', 'n', 'no'):
         try:
             # 先確認 DynamoDB 裡有正在等待的問題
-            response = table.get_item(Key={'pk': PK_NAME})
+            response = table.get_item(Key={'shutdown_state': PK_NAME})
             item     = response.get('Item')
             if item and item.get('is_question') == True:
                 table.update_item(
-                    Key={'pk': PK_NAME},
+                    Key={'shutdown_state': PK_NAME},
                     UpdateExpression='SET #sel = :sel, is_question = :q',
                     ExpressionAttributeNames={'#sel': 'select'},
                     ExpressionAttributeValues={':sel': text, ':q': False},
@@ -287,7 +292,7 @@ def lambda_handler(event: dict, context) -> dict:
     AWS Lambda 進入點，透過 Lambda Function URL 接收 HTTP 請求。
     僅支援 Lambda Function URL 格式（與 API Gateway HTTP API v2 相同）。
     """
-    print(f'[event] {json.dumps(event)}')
+    # print(f'[event] {json.dumps(event)}')
 
     # 取得 path 和 HTTP method（Lambda Function URL 格式）
     path        = event.get('rawPath', '')
