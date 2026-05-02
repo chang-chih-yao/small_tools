@@ -1,4 +1,4 @@
-cd %~dp0
+cd /d "%~dp0"
 call activate yolo8_cpu
 python main.py
 pause
